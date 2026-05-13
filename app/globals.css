@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* SVG element state transitions */
+.landscape-element {
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+.landscape-element.dimmed {
+  opacity: 0.18;
+  filter: saturate(0.3) brightness(0.7);
+}
+
+.landscape-element.highlighted {
+  opacity: 1;
+  filter: saturate(1.3) brightness(1.08);
+}
+
+.landscape-element.neutral {
+  opacity: 1;
+  filter: none;
+}
+
+/* Glow effect for highlighted elements */
+.glow-highlight {
+  filter: drop-shadow(0 0 12px currentColor) saturate(1.4) brightness(1.1);
+}
+
+/* Animated flow paths */
+.flow-path {
+  stroke-dasharray: 8 4;
+  animation: dashFlow 1.5s linear infinite;
+}
+
+@keyframes dashFlow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Groundwater animation */
+.groundwater-wave {
+  animation: gwWave 4s ease-in-out infinite;
+}
+
+@keyframes gwWave {
+  0%, 100% { d: path("M 0 560 Q 200 552 400 560 Q 600 568 800 560 Q 1000 552 1200 560 Q 1400 568 1600 560"); }
+  50% { d: path("M 0 564 Q 200 556 400 564 Q 600 572 800 564 Q 1000 556 1200 564 Q 1400 572 1600 564"); }
+}
+
+/* Hotspot marker pulse */
+@keyframes hotspotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.5;
+  }
+}
+
+.hotspot-ring {
+  animation: hotspotPulse 2.5s ease-in-out infinite;
+}
+
+/* Smooth scrollbar for info panel */
+.info-panel-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.info-panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.info-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* Backdrop blur support */
+.glass {
+  background: rgba(10, 20, 40, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Connection path animation */
+.connection-path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  transition: stroke-dashoffset 0.8s ease;
+}
+
+.connection-path.active {
+  stroke-dashoffset: 0;
+}
+
+/* Rain animation for climate overlay */
+@keyframes rain {
+  0% { transform: translateY(-20px); opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { transform: translateY(60px); opacity: 0; }
+}
+
+/* Sea wave animation */
+@keyframes seaWave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-8px); }
+}
+
+.sea-wave {
+  animation: seaWave 3s ease-in-out infinite;
+}
+
+/* Typography utilities */
+.label-sm {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.label-xs {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
