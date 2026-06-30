@@ -17,6 +17,13 @@ export interface Relevance {
   stedelijk: number
 }
 
+export interface RelevanceNote {
+  ambitie: string
+  samenwerking: string
+  maatregel: string
+  voorbeeld: string
+}
+
 export interface Objective {
   id: string
   label: string
@@ -27,6 +34,7 @@ export interface Objective {
   horizon: string
   relevance: Relevance
   highlightedElements: string[]
+  notes?: Partial<Record<keyof Relevance, RelevanceNote>>
 }
 
 export interface ObjectiveCategory {
@@ -65,11 +73,22 @@ function computeHighlighted(r: Relevance): string[] {
   return result
 }
 
+function parseNote(raw: string): RelevanceNote {
+  const parts = raw.split('|').map(s => s.trim())
+  return {
+    ambitie: parts[0] ?? '',
+    samenwerking: parts[1] ?? '',
+    maatregel: parts[2] ?? '',
+    voorbeeld: parts[3] ?? '',
+  }
+}
+
 function makeObjective(
   id: string, label: string, icon: string, color: string,
   toelichting: string, bron: string, horizon: string, r: Relevance,
+  notes?: Partial<Record<keyof Relevance, RelevanceNote>>,
 ): Objective {
-  return { id, label, icon, color, toelichting, bron, horizon, relevance: r, highlightedElements: computeHighlighted(r) }
+  return { id, label, icon, color, toelichting, bron, horizon, relevance: r, highlightedElements: computeHighlighted(r), notes }
 }
 
 export const RELEVANCE_LABELS: Record<keyof Relevance, string> = {
@@ -104,22 +123,26 @@ export const objectiveCategories: ObjectiveCategory[] = [
     color: '#3B82F6',
     gradient: ['#3B82F6', '#1D4ED8'],
     objectives: [
-      makeObjective('waterveiligheid', 'Waterveiligheid', '🛡️', '#3B82F6',
+      makeObjective('waterveiligheid', 'Waterveiligheid & Wateroverlast', '🛡️', '#3B82F6',
         'Bescherming tegen overstromingen; beheer primaire en regionale waterkeringen; normering en toetsing',
         'Waterwet art. 2.1 lid 1; Waterschapswet; Omgevingswet (afd. 5.1); Waterbesluit; WBI 2017', '2028-2033',
-        { oppervlaktewater:1, grondwater:0, hemelwater:0, afvalwater:0, drinkwater:0, bodem:0, waterkeringen:3, wonenWerken:1, natuur:0, landbouw:0, recreatie:1, industrie:0, zandruggen:1, flanken:2, beekdalen:3, stedelijk:2 }),
+        { oppervlaktewater:1, grondwater:0, hemelwater:0, afvalwater:0, drinkwater:0, bodem:0, waterkeringen:3, wonenWerken:1, natuur:0, landbouw:0, recreatie:1, industrie:0, zandruggen:1, flanken:2, beekdalen:3, stedelijk:2 },
+        { beekdalen: parseNote('voldoende ruimte om neerslagpieken op te vangen | samen met grondeigenaren, landbouw en natuurorganisaties water meer ruimte geven | aanpassen schaderegelingen, stimuleringsregeling | bijv.') }),
       makeObjective('waterkwantiteit', 'Waterkwantiteitsbeheer', '⚖️', '#60A5FA',
         'Peilbeheer, wateraan- en afvoer, waterberging, verdeling beschikbaar water',
         'Waterwet art. 2.1 lid 2; Omgevingswet; Peilbesluiten; Deltaprogramma Zoetwater', '2028-2033',
-        { oppervlaktewater:3, grondwater:3, hemelwater:1, afvalwater:0, drinkwater:0, bodem:1, waterkeringen:0, wonenWerken:2, natuur:2, landbouw:3, recreatie:1, industrie:0, zandruggen:2, flanken:3, beekdalen:3, stedelijk:1 }),
+        { oppervlaktewater:3, grondwater:3, hemelwater:1, afvalwater:0, drinkwater:0, bodem:1, waterkeringen:0, wonenWerken:2, natuur:2, landbouw:3, recreatie:1, industrie:0, zandruggen:2, flanken:3, beekdalen:3, stedelijk:1 },
+        { beekdalen: parseNote('een beekdal dat niet verdrogend werkt op de omgeving | waterschap en grondeigenaren zorgen dat beken blijven stromen, het natter wordt | compensatie waardedaling gronden | bijv.') }),
       makeObjective('zuiveringstaak', 'Zuiveringstaak', '🔬', '#93C5FD',
         "Inzameling, transport en zuivering stedelijk afvalwater; beheer en exploitatie RWZI's; effluentkwaliteit",
         'Waterwet art. 3.4; EU Richtlijn Stedelijk Afvalwater (91/271/EEG, herziening 2024); Activiteitenbesluit', '2028-2033',
-        { oppervlaktewater:2, grondwater:0, hemelwater:0, afvalwater:3, drinkwater:1, bodem:0, waterkeringen:0, wonenWerken:2, natuur:1, landbouw:1, recreatie:0, industrie:3, zandruggen:1, flanken:1, beekdalen:3, stedelijk:2 }),
+        { oppervlaktewater:2, grondwater:0, hemelwater:0, afvalwater:3, drinkwater:1, bodem:0, waterkeringen:0, wonenWerken:2, natuur:1, landbouw:1, recreatie:0, industrie:3, zandruggen:1, flanken:1, beekdalen:3, stedelijk:2 },
+        { beekdalen: parseNote('omgeving geen vervuiling naar het beekdal | grondeigenaren zorgen dat uitspoeling meststoffen en gewasbeschermingsmiddelen minder wordt | maatregel planperiode ... | nog geen voorbeeld') }),
       makeObjective('waterkwaliteit', 'Waterkwaliteitsbeheer', '💧', '#38BDF8',
         'Chemische en ecologische kwaliteit oppervlaktewater; monitoring; beoordeling; maatregelprogramma',
         'Kaderrichtlijn Water (2000/60/EG); Waterwet; Besluit kwaliteitseisen en monitoring water; Omgevingswet', '2027 (KRW)',
-        { oppervlaktewater:3, grondwater:2, hemelwater:0, afvalwater:1, drinkwater:1, bodem:1, waterkeringen:0, wonenWerken:1, natuur:3, landbouw:3, recreatie:1, industrie:2, zandruggen:1, flanken:2, beekdalen:3, stedelijk:1 }),
+        { oppervlaktewater:3, grondwater:2, hemelwater:0, afvalwater:1, drinkwater:1, bodem:1, waterkeringen:0, wonenWerken:1, natuur:3, landbouw:3, recreatie:1, industrie:2, zandruggen:1, flanken:2, beekdalen:3, stedelijk:1 },
+        { beekdalen: parseNote('weigeren van verontreinigd water (specifieke stoffen) | waterschap, gemeenten en bedrijven stoppen met lozen van specifieke stoffen | handelingskader pfas, influentbeleid aanpassen, waterschapsverordening aanpassen | bijv.') }),
       makeObjective('grondwaterbeheer', 'Grondwaterbeheer', '🌊', '#0EA5E9',
         'Kwantitatief en kwalitatief grondwaterbeheer; vergunningverlening onttrekkingen; grondwatermonitoring',
         'Waterwet art. 6.4; Omgevingswet; KRW (grondwaterlichamen); Grondwaterrichtlijn (2006/118/EG)', '2028-2033',

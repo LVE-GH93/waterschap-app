@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { type Hotspot } from '@/data/hotspots'
-import { type Objective, type ObjectiveCategory, RELEVANCE_GROUPS, RELEVANCE_LABELS, getAllObjectives } from '@/data/objectives'
+import { type Objective, type ObjectiveCategory, RELEVANCE_GROUPS, RELEVANCE_LABELS, getAllObjectives, type RelevanceNote } from '@/data/objectives'
 
 interface InfoPanelProps {
   hotspot: Hotspot | null
@@ -244,42 +244,43 @@ function ObjectiveContent({ objective, category }: { objective: Objective; categ
       </div>
 
       {/* Relevance matrix */}
-      {RELEVANCE_GROUPS.map((group) => (
-        <div key={group.label}>
-          <SectionLabel label={group.label} />
-          <div className="flex flex-wrap gap-1.5 mt-2">
+      {RELEVANCE_GROUPS.map((group) => {
+        const hasAny = group.keys.some(k => objective.relevance[k] > 0)
+        return (
+          <div key={group.label}>
+            <SectionLabel label={group.label} />
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {group.keys.map((key) => {
+                const level = objective.relevance[key]
+                if (level === 0) return null
+                return (
+                  <div
+                    key={key}
+                    className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium"
+                    style={{
+                      background: level === 3 ? `${category.color}25` : level === 2 ? `${category.color}15` : `${category.color}08`,
+                      border: `1px solid ${category.color}${level === 3 ? '50' : level === 2 ? '30' : '18'}`,
+                      color: level === 3 ? category.color : level === 2 ? `${category.color}cc` : `${category.color}80`,
+                    }}
+                  >
+                    <span>{level === 3 ? '●●●' : level === 2 ? '●●' : '●'}</span>
+                    <span>{RELEVANCE_LABELS[key]}</span>
+                  </div>
+                )
+              })}
+            </div>
+            {!hasAny && (
+              <p className="text-[10px] text-white/20 mt-1.5 italic">Niet of nauwelijks relevant</p>
+            )}
+            {/* Notes for this group */}
             {group.keys.map((key) => {
-              const level = objective.relevance[key]
-              if (level === 0) return null
-              return (
-                <div
-                  key={key}
-                  className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium"
-                  style={{
-                    background: level === 3
-                      ? `${category.color}25`
-                      : level === 2
-                        ? `${category.color}15`
-                        : `${category.color}08`,
-                    border: `1px solid ${category.color}${level === 3 ? '50' : level === 2 ? '30' : '18'}`,
-                    color: level === 3
-                      ? category.color
-                      : level === 2
-                        ? `${category.color}cc`
-                        : `${category.color}80`,
-                  }}
-                >
-                  <span>{level === 3 ? '●●●' : level === 2 ? '●●' : '●'}</span>
-                  <span>{RELEVANCE_LABELS[key]}</span>
-                </div>
-              )
+              const note = objective.notes?.[key]
+              if (!note) return null
+              return <RelevanceNoteBlock key={key} columnLabel={RELEVANCE_LABELS[key]} note={note} color={category.color} />
             })}
           </div>
-          {group.keys.every(k => objective.relevance[k] === 0) && (
-            <p className="text-[10px] text-white/20 mt-1.5 italic">Niet of nauwelijks relevant</p>
-          )}
-        </div>
-      ))}
+        )
+      })}
     </>
   )
 }
@@ -287,5 +288,33 @@ function ObjectiveContent({ objective, category }: { objective: Objective; categ
 function SectionLabel({ label }: { label: string }) {
   return (
     <span className="text-[10px] font-bold tracking-[0.12em] uppercase text-white/30">{label}</span>
+  )
+}
+
+function RelevanceNoteBlock({ columnLabel, note, color }: { columnLabel: string; note: RelevanceNote; color: string }) {
+  const rows = [
+    { label: 'Ambitie / resultaat', value: note.ambitie },
+    { label: 'Samenwerking', value: note.samenwerking },
+    { label: 'Maatregel', value: note.maatregel },
+    { label: 'Voorbeeld', value: note.voorbeeld },
+  ].filter(r => r.value && r.value !== 'bijv.' && r.value !== 'bijv..' && !r.value.startsWith('bijv'))
+
+  if (rows.length === 0) return null
+
+  return (
+    <div
+      className="mt-2 rounded-lg p-3 space-y-2"
+      style={{ background: `${color}0a`, border: `1px solid ${color}20` }}
+    >
+      <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: `${color}80` }}>
+        Uitwerking — {columnLabel}
+      </div>
+      {rows.map(row => (
+        <div key={row.label}>
+          <div className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">{row.label}</div>
+          <div className="text-[11px] text-white/60 leading-relaxed mt-0.5">{row.value}</div>
+        </div>
+      ))}
+    </div>
   )
 }
