@@ -6,19 +6,21 @@ import LandscapeScene from '@/components/LandscapeScene'
 import ThemeSidebar from '@/components/ThemeSidebar'
 import InfoPanel from '@/components/InfoPanel'
 import { type Hotspot } from '@/data/hotspots'
-import { themes } from '@/data/themes'
+import { getObjectiveById, getCategoryByObjectiveId } from '@/data/objectives'
 
 export default function Home() {
-  const [activeTheme, setActiveTheme] = useState<string | null>(null)
+  const [activeObjective, setActiveObjective] = useState<string | null>(null)
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null)
   const [showIntro, setShowIntro] = useState(true)
 
-  const handleThemeSelect = (themeId: string | null) => {
-    setActiveTheme(themeId)
+  const handleObjectiveSelect = (id: string | null) => {
+    setActiveObjective(id)
+    setSelectedHotspot(null)
+    if (id) setShowIntro(false)
   }
 
   const handleHotspotClick = (hotspot: Hotspot) => {
-    setSelectedHotspot((prev) => (prev?.id === hotspot.id ? null : hotspot))
+    setSelectedHotspot(prev => prev?.id === hotspot.id ? null : hotspot)
     setShowIntro(false)
   }
 
@@ -26,56 +28,62 @@ export default function Home() {
     setSelectedHotspot(null)
   }
 
-  const activeThemeData = activeTheme ? themes.find((t) => t.id === activeTheme) : null
+  const activeObjectiveData = activeObjective ? getObjectiveById(activeObjective) : null
+  const activeCategoryData = activeObjective ? getCategoryByObjectiveId(activeObjective) : null
+
+  const panelObjective = selectedHotspot ? null : (activeObjectiveData ?? null)
+  const panelCategory = selectedHotspot ? null : (activeCategoryData ?? null)
 
   return (
     <main className="w-screen h-screen overflow-hidden relative bg-[#0A1628]">
       {/* ── Main landscape ── */}
       <LandscapeScene
-        activeTheme={activeTheme}
+        activeTheme={activeObjective}
         selectedHotspot={selectedHotspot}
         onHotspotClick={handleHotspotClick}
       />
 
-      {/* ── Theme sidebar ── */}
+      {/* ── Objective sidebar ── */}
       <ThemeSidebar
-        activeTheme={activeTheme}
-        onThemeSelect={handleThemeSelect}
+        activeObjective={activeObjective}
+        onObjectiveSelect={handleObjectiveSelect}
       />
 
       {/* ── Info panel ── */}
       <InfoPanel
         hotspot={selectedHotspot}
+        objective={panelObjective}
+        category={panelCategory}
         onClose={handleClosePanel}
-        onThemeSelect={(id) => { handleThemeSelect(id); setShowIntro(false) }}
-        activeTheme={activeTheme}
+        onObjectiveSelect={(id) => { handleObjectiveSelect(id) }}
+        activeObjective={activeObjective}
       />
 
-      {/* ── Active theme indicator (top bar) ── */}
+      {/* ── Active objective indicator (top bar) ── */}
       <AnimatePresence>
-        {activeThemeData && (
+        {activeObjectiveData && activeCategoryData && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+            className="absolute top-0 left-1/2 z-20 pointer-events-none"
             style={{ transform: 'translateX(-50%)' }}
           >
             <div
               className="mt-3 px-5 py-2 rounded-full text-sm font-semibold flex items-center gap-2.5"
               style={{
-                background: `linear-gradient(90deg, ${activeThemeData.gradient[0]}30, ${activeThemeData.gradient[1]}20)`,
-                border: `1px solid ${activeThemeData.color}40`,
+                background: `linear-gradient(90deg, ${activeCategoryData.gradient[0]}30, ${activeCategoryData.gradient[1]}20)`,
+                border: `1px solid ${activeCategoryData.color}40`,
                 backdropFilter: 'blur(12px)',
-                color: activeThemeData.color,
+                color: activeCategoryData.color,
               }}
             >
-              <span style={{ fontSize: 15 }}>{activeThemeData.icon}</span>
-              <span>{activeThemeData.labelNL}</span>
+              <span style={{ fontSize: 14 }}>{activeObjectiveData.icon}</span>
+              <span>{activeObjectiveData.label}</span>
               <span className="text-white/30 text-xs font-normal">—</span>
-              <span className="text-white/50 text-xs font-normal max-w-xs truncate">
-                {activeThemeData.policyGoal}
+              <span className="text-white/50 text-xs font-normal">
+                {activeObjectiveData.horizon}
               </span>
             </div>
           </motion.div>
@@ -95,20 +103,23 @@ export default function Home() {
           >
             <div className="glass rounded-2xl px-8 py-5 text-center max-w-lg mx-auto">
               <h1 className="text-white text-lg font-semibold mb-1.5 tracking-tight">
-                Strategisch Waterbeheerprogramma
+                Waterbeheerprogramma — Doelstellingenmatrix
               </h1>
               <p className="text-white/45 text-xs leading-relaxed mb-3">
-                Verken het waterbeheersysteem door op thema&apos;s of objecten te klikken.
-                Ontdek verbanden, beleidsdoelen en uitdagingen in het regionale watersysteem.
+                Selecteer een doelstelling uit de drie categorieën om de relevante gebieden in het watersysteem te markeren.
               </p>
               <div className="flex items-center justify-center gap-6 text-[10px] text-white/30 font-medium">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
-                  Selecteer een thema links
+                  <span className="w-2 h-2 rounded-full bg-blue-400/60" />
+                  Wettelijke kerntaken
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-300/60" />
-                  Klik op een hotspot in het landschap
+                  <span className="w-2 h-2 rounded-full bg-emerald-400/60" />
+                  Beleidsdoelen
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-purple-400/60" />
+                  Sectorale ambities
                 </span>
               </div>
             </div>
@@ -120,18 +131,12 @@ export default function Home() {
       <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
         <div
           className="flex items-center justify-between px-6 py-2"
-          style={{
-            background: 'linear-gradient(0deg, rgba(8,16,30,0.7) 0%, transparent 100%)',
-          }}
+          style={{ background: 'linear-gradient(0deg, rgba(8,16,30,0.7) 0%, transparent 100%)' }}
         >
           <div className="flex items-center gap-4">
-            <span className="text-white/20 text-[9px] font-medium tracking-widest uppercase">
-              Waterschap
-            </span>
+            <span className="text-white/20 text-[9px] font-medium tracking-widest uppercase">Waterschap</span>
             <span className="text-white/10 text-[9px]">|</span>
-            <span className="text-white/15 text-[9px]">
-              Watersysteemkaart 2025–2033
-            </span>
+            <span className="text-white/15 text-[9px]">Watersysteemkaart WBP6 2025–2033</span>
           </div>
           <div className="flex items-center gap-3 text-white/15 text-[9px]">
             <span className="flex items-center gap-1">

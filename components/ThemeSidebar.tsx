@@ -2,36 +2,40 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { themes } from '@/data/themes'
+import { objectiveCategories } from '@/data/objectives'
 
 interface ThemeSidebarProps {
-  activeTheme: string | null
-  onThemeSelect: (themeId: string | null) => void
+  activeObjective: string | null
+  onObjectiveSelect: (id: string | null) => void
 }
 
-export default function ThemeSidebar({ activeTheme, onThemeSelect }: ThemeSidebarProps) {
+export default function ThemeSidebar({ activeObjective, onObjectiveSelect }: ThemeSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(true)
-  const [hoveredTheme, setHoveredTheme] = useState<string | null>(null)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
 
-  const handleThemeClick = (themeId: string) => {
-    onThemeSelect(activeTheme === themeId ? null : themeId)
+  const toggleCategory = (catId: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev)
+      next.has(catId) ? next.delete(catId) : next.add(catId)
+      return next
+    })
   }
 
-  const activeThemeData = themes.find((t) => t.id === activeTheme)
+  const handleObjectiveClick = (id: string) => {
+    onObjectiveSelect(activeObjective === id ? null : id)
+  }
 
   return (
     <div className="absolute left-0 top-0 h-full z-20 flex items-center">
       <motion.div
         className="h-full flex flex-col"
-        animate={{ width: isExpanded ? 200 : 56 }}
+        animate={{ width: isExpanded ? 220 : 52 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
-        {/* Sidebar panel */}
-        <div className="h-full glass flex flex-col overflow-hidden"
-          style={{ borderRadius: '0 12px 12px 0' }}>
+        <div className="h-full glass flex flex-col overflow-hidden" style={{ borderRadius: '0 12px 12px 0' }}>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between px-3 py-4 border-b border-white/10 flex-shrink-0">
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
@@ -42,10 +46,10 @@ export default function ThemeSidebar({ activeTheme, onThemeSelect }: ThemeSideba
                   className="flex flex-col"
                 >
                   <span className="text-[10px] font-bold tracking-[0.15em] text-blue-300/60 uppercase">
-                    Thema&apos;s
+                    Doelstellingen
                   </span>
                   <span className="text-xs text-white/80 font-medium mt-0.5">
-                    Waterbeheer
+                    Waterbeheerprogramma
                   </span>
                 </motion.div>
               )}
@@ -64,135 +68,139 @@ export default function ThemeSidebar({ activeTheme, onThemeSelect }: ThemeSideba
             </button>
           </div>
 
-          {/* Theme buttons */}
-          <div className="flex-1 overflow-y-auto py-2 space-y-0.5 info-panel-scroll">
-            {themes.map((theme) => {
-              const isActive = activeTheme === theme.id
-              const isHovered = hoveredTheme === theme.id
+          {/* Categories + objectives */}
+          <div className="flex-1 overflow-y-auto py-2 info-panel-scroll">
+            {objectiveCategories.map((cat) => {
+              const isCatCollapsed = collapsedCategories.has(cat.id)
+              const activeInThisCat = cat.objectives.some(o => o.id === activeObjective)
 
               return (
-                <motion.button
-                  key={theme.id}
-                  onClick={() => handleThemeClick(theme.id)}
-                  onMouseEnter={() => setHoveredTheme(theme.id)}
-                  onMouseLeave={() => setHoveredTheme(null)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all relative overflow-hidden"
-                  style={{
-                    background: isActive
-                      ? `linear-gradient(90deg, ${theme.gradient[0]}25, ${theme.gradient[1]}15)`
-                      : isHovered
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'transparent',
-                    borderRadius: '6px',
-                    margin: '1px 4px',
-                    width: 'calc(100% - 8px)',
-                  }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {/* Active indicator bar */}
-                  {isActive && (
-                    <motion.div
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5/6 rounded-r"
-                      style={{ background: theme.color }}
-                      layoutId="activeBar"
-                    />
-                  )}
-
-                  {/* Icon */}
-                  <div
-                    className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all"
-                    style={{
-                      background: isActive
-                        ? `linear-gradient(135deg, ${theme.gradient[0]}, ${theme.gradient[1]})`
-                        : 'rgba(255,255,255,0.08)',
-                      boxShadow: isActive ? `0 2px 8px ${theme.color}40` : 'none',
-                    }}
+                <div key={cat.id} className="mb-1">
+                  {/* Category header */}
+                  <button
+                    onClick={() => isExpanded && toggleCategory(cat.id)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left"
                   >
-                    <span style={{ fontSize: '13px' }}>{theme.icon}</span>
-                  </div>
-
-                  {/* Label */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -8 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex flex-col min-w-0"
-                      >
-                        <span
-                          className="text-xs font-semibold truncate leading-tight"
-                          style={{ color: isActive ? theme.color : 'rgba(255,255,255,0.75)' }}
+                    <div
+                      className="flex-shrink-0 w-2 h-2 rounded-full"
+                      style={{ background: activeInThisCat ? cat.color : `${cat.color}60` }}
+                    />
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="flex-1 flex items-center justify-between min-w-0"
                         >
-                          {theme.labelNL}
-                        </span>
-                        {isActive && (
-                          <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-[9px] text-white/40 truncate mt-0.5"
+                          <span
+                            className="text-[9px] font-bold tracking-[0.12em] uppercase truncate"
+                            style={{ color: activeInThisCat ? cat.color : 'rgba(255,255,255,0.35)' }}
                           >
-                            {theme.highlightedElements.length} elementen
-                          </motion.span>
-                        )}
+                            {cat.label}
+                          </span>
+                          <motion.svg
+                            width="10" height="10" viewBox="0 0 10 10"
+                            animate={{ rotate: isCatCollapsed ? -90 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex-shrink-0 ml-1"
+                          >
+                            <path d="M 2 3 L 5 7 L 8 3" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          </motion.svg>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+
+                  {/* Objectives list */}
+                  <AnimatePresence>
+                    {(!isCatCollapsed) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        {cat.objectives.map((obj) => {
+                          const isActive = activeObjective === obj.id
+                          return (
+                            <motion.button
+                              key={obj.id}
+                              onClick={() => handleObjectiveClick(obj.id)}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-all relative"
+                              style={{
+                                background: isActive
+                                  ? `linear-gradient(90deg, ${cat.color}20, ${cat.color}0a)`
+                                  : 'transparent',
+                                borderRadius: '6px',
+                                margin: '1px 4px',
+                                width: 'calc(100% - 8px)',
+                              }}
+                              whileTap={{ scale: 0.97 }}
+                            >
+                              {/* Active bar */}
+                              {isActive && (
+                                <motion.div
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4/5 rounded-r"
+                                  style={{ background: cat.color }}
+                                  layoutId="activeBar"
+                                />
+                              )}
+
+                              {/* Icon */}
+                              <div
+                                className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-xs transition-all"
+                                style={{
+                                  background: isActive
+                                    ? `linear-gradient(135deg, ${cat.gradient[0]}, ${cat.gradient[1]})`
+                                    : 'rgba(255,255,255,0.07)',
+                                  boxShadow: isActive ? `0 2px 6px ${cat.color}40` : 'none',
+                                }}
+                              >
+                                <span style={{ fontSize: '11px' }}>{obj.icon}</span>
+                              </div>
+
+                              {/* Label */}
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.span
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-[11px] font-medium leading-tight"
+                                    style={{ color: isActive ? obj.color : 'rgba(255,255,255,0.65)' }}
+                                  >
+                                    {obj.label}
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                            </motion.button>
+                          )
+                        })}
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.button>
+
+                  {/* Divider */}
+                  <div className="mx-3 border-b border-white/5 mt-1" />
+                </div>
               )
             })}
           </div>
 
-          {/* Active theme description */}
-          <AnimatePresence>
-            {isExpanded && activeThemeData && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.25 }}
-                className="p-3 border-t border-white/10"
-                style={{
-                  background: `linear-gradient(135deg, ${activeThemeData.gradient[0]}15, ${activeThemeData.gradient[1]}08)`,
-                }}
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ background: activeThemeData.color }}
-                  />
-                  <span className="text-[10px] font-bold uppercase tracking-widest"
-                    style={{ color: activeThemeData.color }}>
-                    Actief
-                  </span>
-                </div>
-                <p className="text-[10px] text-white/55 leading-relaxed line-clamp-4">
-                  {activeThemeData.policyGoal}
-                </p>
-                <button
-                  onClick={() => onThemeSelect(null)}
-                  className="mt-2 text-[9px] text-white/30 hover:text-white/60 transition-colors"
-                >
-                  × Thema wissen
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Bottom: Reset and info */}
-          <div className="px-3 py-3 border-t border-white/10">
+          {/* Bottom hint */}
+          <div className="px-3 py-3 border-t border-white/10 flex-shrink-0">
             <AnimatePresence>
               {isExpanded ? (
-                <motion.div
+                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  className="text-[9px] text-white/25 leading-relaxed"
                 >
-                  <p className="text-[9px] text-white/25 leading-relaxed">
-                    Klik op een thema om gerelateerde elementen te markeren
-                  </p>
-                </motion.div>
+                  Klik op een doelstelling om relevante gebieden te markeren
+                </motion.p>
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}

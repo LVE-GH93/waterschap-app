@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { themes } from '@/data/themes'
+import { getAllObjectives } from '@/data/objectives'
 import { hotspots, type Hotspot } from '@/data/hotspots'
 
 interface LandscapeSceneProps {
@@ -27,8 +27,8 @@ export default function LandscapeScene({
   selectedHotspot,
   onHotspotClick,
 }: LandscapeSceneProps) {
-  const theme = activeTheme ? themes.find((t) => t.id === activeTheme) : null
-  const highlighted = theme?.highlightedElements ?? []
+  const objective = activeTheme ? getAllObjectives().find(o => o.id === activeTheme) : null
+  const highlighted = objective?.highlightedElements ?? []
 
   const getElementClass = useCallback(
     (id: string) => {
@@ -871,7 +871,7 @@ export default function LandscapeScene({
 
         {/* ── THEME CONNECTION PATHS ── */}
         <AnimatePresence>
-          {theme?.connections.map((conn, i) => {
+          {([] as { from: string; to: string; label?: string }[]).map((conn, i) => {
             // Map element IDs to approximate SVG coordinates
             const coords: Record<string, [number, number]> = {
               'agricultural-west': [350, 440],
@@ -913,7 +913,7 @@ export default function LandscapeScene({
                 {/* Connection path */}
                 <motion.path
                   d={`M ${from[0]} ${from[1]} Q ${mx} ${my} ${to[0]} ${to[1]}`}
-                  stroke={theme.color}
+                  stroke={'#4AB0D8'}
                   strokeWidth="2"
                   fill="none"
                   opacity="0.7"
@@ -925,7 +925,7 @@ export default function LandscapeScene({
                 {/* Animated dot on path */}
                 <motion.circle
                   r="4"
-                  fill={theme.color}
+                  fill={'#4AB0D8'}
                   opacity="0.9"
                   animate={{
                     offsetDistance: ['0%', '100%'],
@@ -942,7 +942,7 @@ export default function LandscapeScene({
                     x={mx}
                     y={my - 8}
                     fontSize="9"
-                    fill={theme.color}
+                    fill={'#4AB0D8'}
                     textAnchor="middle"
                     fontWeight="600"
                     opacity="0.8"
@@ -1006,8 +1006,9 @@ export default function LandscapeScene({
           const svgX = (hotspot.x / 100) * 1600
           const svgY = (hotspot.y / 100) * 870
           const isActive = selectedHotspot?.id === hotspot.id
+          const primaryEl = hotspot.id.replace(/-hotspot$/, '')
           const isThemeActive = activeTheme
-            ? hotspot.themes.includes(activeTheme)
+            ? highlighted.includes(primaryEl) || (hotspot.linkedElements ?? []).some(el => highlighted.includes(el))
             : true
 
           return (
